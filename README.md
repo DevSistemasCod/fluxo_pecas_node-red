@@ -1,1 +1,1 @@
-# atividade_etl_pbi
+# nós desenvolvidos em Node-RED para separação de peças.
