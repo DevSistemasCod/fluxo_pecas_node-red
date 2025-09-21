@@ -1,0 +1,570 @@
+[
+    {
+        "id": "e6bceec8d73e6883",
+        "type": "tab",
+        "label": "Fluxo 5",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "bd809355f64356f0",
+        "type": "mqtt in",
+        "z": "e6bceec8d73e6883",
+        "name": "",
+        "topic": "fabrica/contador",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "d3ac38b0a70ddbc1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 100,
+        "y": 240,
+        "wires": [
+            [
+                "ebe8a5b2701e55d8"
+            ]
+        ]
+    },
+    {
+        "id": "ebe8a5b2701e55d8",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "identificar_pecas",
+        "func": "// Recupera o vetor anterior do contexto (se não existir, cria [null, null, null])\n// context → é o contexto do nó. Só vale para esse nó específico.\n// context funciona como uma \"memória do nó\" ele permite comparar o estado atual \n// com o estado anterior, coisa que variáveis locais não fariam.\nlet vetorAnterior = context.get('vetorAnterior') || [null, null, null];\n\n// navega dentro do vetor de array e retorna em vetor numérico para cada item\nlet vetorAtual = msg.payload.map(v => Number(v));\n\n// Cria vetor de mensagens de saída (uma para cada tipo de peça)\nlet mensagensParaEnviar = [null, null, null];\n\n// Captura data/hora local\nlet localStr = new Date().toLocaleString('pt-BR', {\n    timeZone: 'America/Sao_Paulo',\n    hour12: false\n});\nlet [dataAtual, horaAtual] = localStr.split(',');\ndataAtual = dataAtual.trim();\nhoraAtual = horaAtual.trim();\n\n// Tipos de peças\nlet tiposDePeca = [\"Grande\", \"Média\", \"Pequena\"];\n\n// Percorre cada posição do vetor\nfor (let i = 0; i < 3; i++) {\n    mensagensParaEnviar[i] = null;\n    if (vetorAtual[i] !== vetorAnterior[i]) {\n        mensagensParaEnviar[i] = {\n            payload: {\n                quantidade: vetorAtual[i],\n                tipo: tiposDePeca[i],\n                data: dataAtual,\n                hora: horaAtual\n            }\n        };\n    }\n}\n\n// Atualiza o contexto\ncontext.set('vetorAnterior', vetorAtual);\n\n// Retorna as mensagens (Node-RED enviará para as 3 saídas)\nreturn mensagensParaEnviar;\n",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 240,
+        "wires": [
+            [
+                "686fa822c25da46d",
+                "a1906695e9b10af6",
+                "42a72877ab3bc43a",
+                "7a6d180df9f999b7",
+                "e0ed408fa7b03b0f",
+                "cf5195449ca98f79",
+                "938162570eb18b44"
+            ],
+            [
+                "e0ed408fa7b03b0f",
+                "938162570eb18b44",
+                "cf5195449ca98f79"
+            ],
+            [
+                "e0ed408fa7b03b0f",
+                "938162570eb18b44",
+                "cf5195449ca98f79"
+            ]
+        ]
+    },
+    {
+        "id": "7a6d180df9f999b7",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "qtd_pecas",
+        "func": "msg.payload = msg.payload.quantidade;  // pega só o número de peças produzidas\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 570,
+        "y": 220,
+        "wires": [
+            [
+                "c128d06c63e5fec6"
+            ]
+        ]
+    },
+    {
+        "id": "42a72877ab3bc43a",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "classifica_tipo",
+        "func": "msg.payload = msg.payload.tipo;  \nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 180,
+        "wires": [
+            [
+                "df7ad57737a97996"
+            ]
+        ]
+    },
+    {
+        "id": "686fa822c25da46d",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "data",
+        "func": "msg.payload = msg.payload.data;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 100,
+        "wires": [
+            [
+                "b4203e14f41af504"
+            ]
+        ]
+    },
+    {
+        "id": "a1906695e9b10af6",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "tempo_ultima_peca",
+        "func": "msg.payload = msg.payload.hora;  \nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 140,
+        "wires": [
+            [
+                "ae7d85829d3a25bb"
+            ]
+        ]
+    },
+    {
+        "id": "ae7d85829d3a25bb",
+        "type": "ui_text",
+        "z": "e6bceec8d73e6883",
+        "group": "0157aef4e87793b0",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Horário última Peça",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "style": true,
+        "font": "Verdana,Verdana,Geneva,sans-serif",
+        "fontSize": "18",
+        "color": "#235dd1",
+        "x": 790,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "c128d06c63e5fec6",
+        "type": "ui_gauge",
+        "z": "e6bceec8d73e6883",
+        "name": "",
+        "group": "0157aef4e87793b0",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Produção vs Meta",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "150",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 750,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "b4203e14f41af504",
+        "type": "ui_text",
+        "z": "e6bceec8d73e6883",
+        "group": "0157aef4e87793b0",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Data",
+        "format": "{{msg.payload}}",
+        "layout": "row-center",
+        "className": "",
+        "style": true,
+        "font": "Verdana,Verdana,Geneva,sans-serif",
+        "fontSize": "18",
+        "color": "#4258ff",
+        "x": 670,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "df7ad57737a97996",
+        "type": "ui_text",
+        "z": "e6bceec8d73e6883",
+        "group": "0157aef4e87793b0",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Tipo",
+        "format": "{{msg.payload}}",
+        "layout": "row-center",
+        "className": "",
+        "style": true,
+        "font": "",
+        "fontSize": "18",
+        "color": "#288f47",
+        "x": 730,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "1f4021f898a48c98",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "peca_1",
+        "func": "// msg.payload já vem do nó anterior, ex:\nlet dadoPeca1 = msg.payload;\n\n// Verifica se existe valor (não é null)\nif (dadoPeca1) {\n    // Imprime no debug (console do Node-RED)\n    node.warn(`Peça Tipo 1 detectada: ${dadoPeca1.quantidade} unidades em ${dadoPeca1.data} ${dadoPeca1.hora}`);\n\n    // Aqui você pode transformar ou repassar a mensagem\n    // Exemplo: só enviar a quantidade para outro nó\n    msg.payload = dadoPeca1.quantidade;\n\n    // Retorna a mensagem para o fluxo\n    return msg;\n} else {\n    // Se não houver mudança, não envia nada\n    return null;\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "64b2047ce3b2450a",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "peca_2",
+        "func": "// msg.payload já vem do nó anterior, ex:\nlet dadoPeca2 = msg.payload;\n\n// Verifica se existe valor (não é null)\nif (dadoPeca2) {\n    // Imprime no debug (console do Node-RED)\n    node.warn(`Peça Tipo 2 detectada: ${dadoPeca2.quantidade} unidades em ${dadoPeca2.data} ${dadoPeca2.hora}`);\n\n    // Aqui você pode transformar ou repassar a mensagem\n    // Exemplo: só enviar a quantidade para outro nó\n    msg.payload = dadoPeca2.quantidade;\n\n    // Retorna a mensagem para o fluxo\n    return msg;\n} else {\n    // Se não houver mudança, não envia nada\n    return null;\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 420,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ef25198339cb0e43",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "peca_3",
+        "func": "// msg.payload já vem do nó anterior, ex:\nlet dadoPeca3 = msg.payload;\n\n// Verifica se existe valor (não é null)\nif (dadoPeca3) {\n    // Imprime no debug (console do Node-RED)\n    node.warn(`Peça Tipo 1 detectada: ${dadoPeca3.quantidade} unidades em ${dadoPeca3.data} ${dadoPeca3.hora}`);\n\n    // Aqui você pode transformar ou repassar a mensagem\n    // Exemplo: só enviar a quantidade para outro nó\n    msg.payload = dadoPeca3.quantidade;\n\n    // Retorna a mensagem para o fluxo\n    return msg;\n} else {\n    // Se não houver mudança, não envia nada\n    return null;\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e0ed408fa7b03b0f",
+        "type": "join",
+        "z": "e6bceec8d73e6883",
+        "name": "",
+        "mode": "custom",
+        "build": "array",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": ",",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "",
+        "count": "3",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 590,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "938162570eb18b44",
+        "type": "debug",
+        "z": "e6bceec8d73e6883",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "ab776e84a997bd79",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "csv",
+        "func": "let vetorPecas = msg.payload; // array de 3 objetos\n//let csv = \"tipo,quantidade,data,hora\\n\"; // cabeçalho do CSV\nlet csv = \"\"\n\n// Percorre cada objeto do array vetorPecas\nfor (let i = 0; i < vetorPecas.length; i++) {\n    let peca = vetorPecas[i]; // pega o objeto da peça atual\n    \n    let tipo = peca.tipo;         // extrai o tipo da peça\n    let quantidade = peca.quantidade; // extrai a quantidade\n    let data = peca.data;         // extrai a data\n    let hora = peca.hora;         // extrai a hora\n\n    // Constrói uma linha do CSV com os valores extraídos\n    let linhaCSV = \"\\n\" + tipo + \",\" + quantidade + \",\" + data + \",\" + hora;\n\n    // Adiciona a linha ao CSV final\n    csv = csv + linhaCSV;\n}\n\n// Define o CSV como payload da mensagem\nmsg.payload = csv;\n\n// Retorna a mensagem para o próximo nó do fluxo\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 320,
+        "wires": [
+            [
+                "30b9d8818b20345d"
+            ]
+        ]
+    },
+    {
+        "id": "30b9d8818b20345d",
+        "type": "file",
+        "z": "e6bceec8d73e6883",
+        "name": "",
+        "filename": "C:\\dados\\historico.csv",
+        "filenameType": "str",
+        "appendNewline": false,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "utf8",
+        "x": 1160,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "19492f332c6e14c3",
+        "type": "inject",
+        "z": "e6bceec8d73e6883",
+        "name": "Definir Rotulo",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 120,
+        "y": 60,
+        "wires": [
+            [
+                "3114d237b36fbf7c"
+            ]
+        ]
+    },
+    {
+        "id": "3114d237b36fbf7c",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "Cabeçalho",
+        "func": "msg.payload = \"Tipo,Quantidade,Data,Horário\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 60,
+        "wires": [
+            [
+                "30b9d8818b20345d"
+            ]
+        ]
+    },
+    {
+        "id": "b675a952433d111e",
+        "type": "mysql",
+        "z": "e6bceec8d73e6883",
+        "mydb": "944d93f5008df393",
+        "name": "banco_exemplo_proj",
+        "x": 1020,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "252e956c6b9842cd",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "monta_insert_peca_1",
+        "func": "let vetorPecas = msg.payload; // array de objetos do join\n\nfunction getFirstInsertQuery(vetor) {\n    if (Array.isArray(vetor) && vetor.length > 0) {\n        let peca = vetor[0];\n\n        // Verifica se todos os dados necessários estão presentes\n        if (peca.quantidade && peca.data && peca.tipo && peca.hora) {\n            let id_contagem = peca.quantidade;\n\n            // Converte de DD/MM/YYYY para YYYY-MM-DD\n            let partesData = peca.data.split('/');\n            let data_fabricacao = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;\n\n            // Garante que o tempo fique no padrão HH:MM:SS\n            let tempo_ciclo = peca.hora;\n\n            let tipo = peca.tipo;\n            let peca_status = 1;\n\n            // Monta o comando INSERT e retorna\n            return `INSERT INTO peca_tipo_1 (id_contagem, data_fabricacao, tipo, tempo_ciclo, peca_status) VALUES (${id_contagem}, '${data_fabricacao}', '${tipo}', '${tempo_ciclo}', '${peca_status}');`;\n        } \n    } \n    return \"\"; // vetor vazio ou inválido\n    \n}\n\n\n// Atualiza msg.topic com a query gerada\nmsg.topic = getFirstInsertQuery(vetorPecas);\n//node.warn(msg);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 400,
+        "wires": [
+            [
+                "b675a952433d111e"
+            ]
+        ]
+    },
+    {
+        "id": "be849a226421a965",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "monta_insert_peca_2",
+        "func": "let vetorPecas = msg.payload; // array de objetos do join\n\nfunction getFirstInsertQuery(vetor) {\n    if (Array.isArray(vetor) && vetor.length > 0) {\n        let peca = vetor[1];\n\n        // Verifica se todos os dados necessários estão presentes\n        if (peca.quantidade && peca.data && peca.tipo && peca.hora) {\n            let id_contagem = peca.quantidade;\n\n            // Converte de DD/MM/YYYY para YYYY-MM-DD\n            let partesData = peca.data.split('/');\n            let data_fabricacao = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;\n\n            // Garante que o tempo fique no padrão HH:MM:SS\n            let tempo_ciclo = peca.hora;\n\n            let tipo = peca.tipo;\n            let peca_status = 1;\n\n            // Monta o comando INSERT\n            return `INSERT INTO peca_tipo_2 (id_contagem, data_fabricacao, tipo, tempo_ciclo, peca_status) VALUES (${id_contagem}, '${data_fabricacao}', '${tipo}', '${tempo_ciclo}', '${peca_status}');`;\n        }\n    }\n    return \"\"; // vetor vazio ou inválido\n\n}\n\n\n// Atualiza msg.topic com a query gerada\nmsg.topic = getFirstInsertQuery(vetorPecas);\n//node.warn(msg);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 440,
+        "wires": [
+            [
+                "b675a952433d111e"
+            ]
+        ]
+    },
+    {
+        "id": "cab807f7197672bf",
+        "type": "function",
+        "z": "e6bceec8d73e6883",
+        "name": "monta_insert_peca_3",
+        "func": "let vetorPecas = msg.payload; // array de objetos do join\n\nfunction getFirstInsertQuery(vetor) {\n    if (Array.isArray(vetor) && vetor.length > 0) {\n        let peca = vetor[2];\n\n        // Verifica se todos os dados necessários estão presentes\n        if (peca.quantidade && peca.data && peca.tipo && peca.hora) {\n            let id_contagem = peca.quantidade;\n\n            // Converte de DD/MM/YYYY para YYYY-MM-DD\n            let partesData = peca.data.split('/');\n            let data_fabricacao = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;\n\n            // Garante que o tempo fique no padrão HH:MM:SS\n            let tempo_ciclo = peca.hora;\n\n            let tipo = peca.tipo;\n            let peca_status = 1;\n\n            // Monta o comando INSERT\n            return `INSERT INTO peca_tipo_3 (id_contagem, data_fabricacao, tipo, tempo_ciclo, peca_status) VALUES (${id_contagem}, '${data_fabricacao}', '${tipo}', '${tempo_ciclo}', '${peca_status}');`;\n        }\n    }\n    return \"\"; // vetor vazio ou inválido\n\n}\n\n\n// Atualiza msg.topic com a query gerada\nmsg.topic = getFirstInsertQuery(vetorPecas);\n//node.warn(msg);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 480,
+        "wires": [
+            [
+                "b675a952433d111e"
+            ]
+        ]
+    },
+    {
+        "id": "cf5195449ca98f79",
+        "type": "websocket out",
+        "z": "e6bceec8d73e6883",
+        "name": "",
+        "server": "91d6e970d3798158",
+        "client": "",
+        "x": 370,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "10d4c970b2d3faa9",
+        "type": "ui_spacer",
+        "z": "e6bceec8d73e6883",
+        "name": "spacer",
+        "group": "acbc3d2cf26aa0ba",
+        "order": 1,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "d3ac38b0a70ddbc1",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker.hivemq.com",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "0157aef4e87793b0",
+        "type": "ui_group",
+        "name": "G1",
+        "tab": "b59706c5b8f428cd",
+        "order": 1,
+        "disp": false,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "944d93f5008df393",
+        "type": "MySQLdatabase",
+        "name": "Banco_Projeto",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "banco_exemplo_proj",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
+        "id": "91d6e970d3798158",
+        "type": "websocket-listener",
+        "path": "/ws/meuTeste",
+        "wholemsg": "false"
+    },
+    {
+        "id": "b59706c5b8f428cd",
+        "type": "ui_tab",
+        "name": "Painel Informativo - Peças",
+        "icon": "dashboard",
+        "order": 2,
+        "disabled": false,
+        "hidden": false
+    }
+]
